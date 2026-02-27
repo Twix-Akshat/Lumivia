@@ -1,8 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lumivia - Your Mental Wellness Partner
+
+A modern mental health therapy platform built with Next.js, connecting patients with licensed therapists through secure video sessions.
+
+## Features
+
+- 🎥 HD video therapy sessions
+- 📅 Flexible scheduling system
+- 📝 Private journaling and mood tracking
+- 🔒 HIPAA-compliant and secure
+- 📊 Progress tracking and assessments
+- 💬 Real-time notifications
+- 🌓 Dark mode support
+- 📱 Fully responsive design
+
+## Tech Stack
+
+- **Framework:** Next.js 15 with App Router
+- **Authentication:** NextAuth.js
+- **Database:** PostgreSQL with Prisma ORM
+- **Styling:** Tailwind CSS with shadcn/ui components
+- **UI Components:** Radix UI primitives
+- **Icons:** Lucide React
+- **Animations:** Tailwind Animate CSS
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -16,9 +49,47 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+lumivia/
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   ├── auth/              # Authentication pages
+│   ├── dashboard/         # Dashboard pages (patient, therapist, admin)
+│   └── session/           # Video session pages
+├── components/            # React components
+│   └── ui/               # shadcn/ui components
+├── lib/                   # Utility functions
+├── prisma/               # Database schema and migrations
+└── public/               # Static assets
+```
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+DATABASE_URL="your-database-url"
+NEXTAUTH_SECRET="your-nextauth-secret"
+NEXTAUTH_URL="http://localhost:3000"
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+```
+
+## User Roles
+
+- **Patient:** Book sessions, complete assessments, journal entries
+- **Therapist:** Manage availability, accept sessions, add notes
+- **Admin:** View analytics, manage users and activities
+
+## Color Theme
+
+Lumivia uses a beautiful yellow gradient theme with OKLCH color space for modern, vibrant colors:
+- Primary: Warm yellow tones (hue 85)
+- Accent: Complementary yellow shades
+- Background: Soft cream/white with subtle yellow tint
+- Dark mode: Deep warm tones with yellow accents
 
 ## Learn More
 

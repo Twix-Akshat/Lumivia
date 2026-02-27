@@ -1,0 +1,105 @@
+Table Name Field Name Data Type Key/Constraints Description Example Data
+users user_id INT PRIMARY KEY, Auto-Increment Unique identifier for every user. 12
+users email VARCHAR(100) UNIQUE, NOT NULL User's email address. user@example.com'
+users password_hash VARCHAR(255) NULL (for OAuth users) Hashed password for manual login. $2a$10$...'
+users oauth_google_id VARCHAR(255) NULL External ID for Google login. 10475...'
+users role ENUM NOT NULL User role: 'patient', 'therapist', 'admin'. therapist'
+users full_name VARCHAR(100) NOT NULL User's full name. Dr. Alex Smith'
+users profile_picture_url VARCHAR(255) NULL Path/URL to the profile image. /media/profiles/12.jpg'
+users gender ENUM NULL Gender of the user. Female'
+users date_of_birth DATE NULL User's date of birth. 1985-06-15'
+users phone_number VARCHAR(20) NULL User's contact phone number. +15551234567'
+users about_bio TEXT NULL A short biography or 'About Me'. Licensed CBT & Trauma Therapist.'
+users license_number VARCHAR(50) NULL (for non-therapists) Therapist's professional license number. LCSW-10948'
+users specialization VARCHAR(255) NULL Therapist's areas of expertise. CBT & Trauma Therapy'
+users consultation_fee DECIMAL(10, 2) NULL Fee per therapy session. 500
+users experience_years INT NULL Years of professional experience. 10
+users verification_status ENUM NOT NULL Therapist verification status. Verified'
+therapist_availability availability_id INT PRIMARY KEY, Auto-Increment Unique identifier for the availability slot. 1
+therapist_availability therapist_id INT FOREIGN KEY (users) Links to the therapist user. 12
+therapist_availability day_of_week ENUM NOT NULL Day of the week the therapist is available. Monday'
+therapist_availability start_time TIME NOT NULL Start time of the availability slot. 10:00:00'
+therapist_availability end_time TIME NOT NULL End time of the availability slot. 14:00:00'
+sessions session_id INT PRIMARY KEY, Auto-Increment Unique identifier for a session booking. 101
+sessions patient_id INT FOREIGN KEY (users) The user who booked the session (Patient). 50
+sessions therapist_id INT FOREIGN KEY (users) The therapist for the session. 12
+sessions scheduled_date DATE NOT NULL The date the session is scheduled. 2025-12-10'
+sessions start_time TIME NOT NULL The scheduled start time. 11:00:00'
+sessions end_time TIME NOT NULL The scheduled end time. 12:00:00'
+sessions status ENUM NOT NULL Session status: 'pending', 'accepted', 'completed', 'cancelled'. completed'
+sessions session_type ENUM NOT NULL Session medium: 'video_call', 'audio_call', 'text_consultation'. video_call'
+sessions issue_description TEXT NULL Patient's description of their issue when booking. feeling anxious for past two weeks'
+sessions session_summary TEXT NULL Therapist's summary after the session. Patient shows signs of social anxiety...'
+messages message_id BIGINT PRIMARY KEY, Auto-Increment Unique identifier for a message. 5001
+messages session_id INT FOREIGN KEY (sessions) The session the message relates to (NULL if general chat). 101
+messages sender_id INT FOREIGN KEY (users) The user who sent the message. 50
+messages receiver_id INT FOREIGN KEY (users) The user who receives the message. 12
+messages message_body TEXT NOT NULL The content of the message. Are we still on for tomorrow?'
+messages attachment_path VARCHAR(255) NULL File path for attachments like prescriptions. /files/prescriptions/101.pdf'
+messages sent_at DATETIME NOT NULL Timestamp of when the message was sent. 2025-12-09 15:30:00'
+messages read_status BOOLEAN NOT NULL TRUE if the message has been read. FALSE
+therapist_notes note_id INT PRIMARY KEY, Auto-Increment Unique identifier for a therapist's note. 201
+therapist_notes therapist_id INT FOREIGN KEY (users) The therapist writing the note. 12
+therapist_notes patient_id INT FOREIGN KEY (users) The patient the note is about. 50
+therapist_notes session_id INT FOREIGN KEY (sessions) The session the note is related to (optional). 101
+therapist_notes note_content TEXT NOT NULL The private note content. Patient shows signs of social anxiety; recommend CBT exercises.'
+therapist_notes created_at DATETIME NOT NULL Timestamp of creation. 2025-12-10 12:30:00'
+journals journal_id INT PRIMARY KEY, Auto-Increment Unique identifier for a journal entry. 301
+journals patient_id INT FOREIGN KEY (users) The patient who created the entry. 50
+journals title VARCHAR(255) NULL Title of the journal entry. A Difficult Morning'
+journals entry_text TEXT NOT NULL The main content of the journal entry. Woke up feeling a lot of stress...'
+journals mood_value INT NULL Mood rating from 1 (worst) to 10 (best). 3
+journals tags VARCHAR(255) NULL Comma-separated tags (e.g., 'stress', 'productivity'). stress, anxiety'
+journals created_at DATETIME NOT NULL Timestamp of entry creation. 2025-12-10 08:00:00'
+assessments assessment_id INT PRIMARY KEY, Auto-Increment Unique ID for the assessment/quiz. 1
+assessments name VARCHAR(100) NOT NULL Name of the assessment. PHQ-9 Depression Test'
+assessments description TEXT NULL Detailed description of the quiz. A 9-question depression screening tool.'
+assessments questions_json JSON NOT NULL JSON structure defining the quiz questions and scoring. {"q1": "Little interest..."}'
+assessment_results result_id INT PRIMARY KEY, Auto-Increment Unique ID for a completed assessment result. 401
+assessment_results patient_id INT FOREIGN KEY (users) The patient who took the assessment. 50
+assessment_results assessment_id INT FOREIGN KEY (assessments) The assessment that was completed. 1
+assessment_results numerical_score INT NOT NULL The final calculated score. 18
+assessment_results severity_level VARCHAR(50) NOT NULL Interpretation of the score. Severe Depression'
+assessment_results completed_at DATETIME NOT NULL Timestamp of completion. 2025-12-05 10:00:00'
+payments payment_id INT PRIMARY KEY, Auto-Increment Unique ID for a payment transaction. 601
+payments session_id INT FOREIGN KEY (sessions) The session the payment is for. 101
+payments patient_id INT FOREIGN KEY (users) The user who made the payment. 50
+payments therapist_id INT FOREIGN KEY (users) The therapist receiving the payment. 12
+payments amount DECIMAL(10, 2) NOT NULL The amount paid. 500
+payments payment_status ENUM NOT NULL Status: 'paid', 'failed', 'pending'. paid'
+payments payment_method ENUM NULL Method: 'UPI', 'card', 'wallet', etc. card'
+payments transaction_reference VARCHAR(255) UNIQUE, NOT NULL Unique reference from the payment gateway. TXN123456789'
+payments payment_date DATETIME NOT NULL Timestamp of payment. 2025-12-09 16:00:00'
+wellness_content content_id INT PRIMARY KEY, Auto-Increment Unique ID for a piece of wellness content. 701
+wellness_content author_id INT FOREIGN KEY (users) The user who created the content (Therapist/Admin). 12
+wellness_content title VARCHAR(255) NOT NULL Title of the article or video. 5 Ways to Manage Anxiety'
+wellness_content description TEXT NULL Short summary of the content. Practical tips for coping with daily anxiety.'
+wellness_content content_type ENUM NOT NULL Type: 'article', 'video', 'meditation_audio'. article'
+wellness_content content_body TEXT NULL (for videos/audio) The full article text. In this article, we explore...'
+wellness_content video_url VARCHAR(255) NULL (for articles) URL for the video/audio file. https://youtube.com/...'
+wellness_content topics VARCHAR(255) NULL Tags for categorization. anxiety, stress management'
+wellness_content created_at DATETIME NOT NULL Timestamp of creation. 2025-11-01 10:00:00'
+notifications notification_id INT PRIMARY KEY, Auto-Increment Unique ID for a notification. 801
+notifications user_id INT FOREIGN KEY (users) The user who is receiving the notification. 12
+notifications notification_type ENUM NOT NULL Type: 'booking_request', 'session_accepted', 'payment_success', etc. booking_request'
+notifications message VARCHAR(255) NOT NULL The notification message. New therapy session request from Patient 50.'
+notifications read_status BOOLEAN NOT NULL TRUE if the user has read it. FALSE
+notifications created_at DATETIME NOT NULL Timestamp of creation. 2025-12-09 15:00:00'
+activity_logs log_id BIGINT PRIMARY KEY, Auto-Increment Unique ID for the log entry. 9001
+activity_logs user_id INT FOREIGN KEY (users) The user performing the action (NULL for system/failed attempts). 50
+activity_logs activity_type VARCHAR(100) NOT NULL The type of event (e.g., 'login', 'logout', 'password_reset'). login'
+activity_logs device_info VARCHAR(255) NULL Details about the device and browser. Chrome on Windows 10'
+activity_logs ip_address VARCHAR(50) NOT NULL IP address from which the activity occurred. 192.168.1.1'
+activity_logs logged_at DATETIME NOT NULL Timestamp of the event. 2025-12-10 12:00:00'
+feedback feedback_id INT PRIMARY KEY, Auto-Increment Unique ID for a rating and feedback submission. 1001
+feedback patient_id INT FOREIGN KEY (users) The patient who gave the feedback. 50
+feedback therapist_id INT FOREIGN KEY (users) The therapist being rated. 12
+feedback session_id INT FOREIGN KEY (sessions) The session the feedback relates to. 101
+feedback rating INT NOT NULL (1-5) The rating given (1 to 5 stars). 5
+feedback feedback_text TEXT NULL Detailed feedback from the patient. Dr. Smith was incredibly helpful and empathetic.'
+feedback submitted_at DATETIME NOT NULL Timestamp of submission. 2025-12-10 13:00:00'
+media_uploads media_id INT PRIMARY KEY, Auto-Increment Unique ID for a stored file. 1101
+media_uploads user_id INT FOREIGN KEY (users) The user who uploaded the file. 50
+media_uploads file_path VARCHAR(255) NOT NULL The secure path to the stored file. /uploads/patient50/doc-report.pdf'
+media_uploads file_type VARCHAR(50) NOT NULL MIME type or simple file category. application/pdf'
+media_uploads upload_date DATETIME NOT NULL Timestamp of file upload. 2025-12-08 09:00:00'

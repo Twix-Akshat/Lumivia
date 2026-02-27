@@ -1,19 +1,30 @@
 import prisma from "@/lib/prisma"
 import { SessionStatus, SessionType } from "@prisma/client"
 import { NextResponse } from "next/server"
+import { createNotification } from "@/lib/notifications"
 
 /**
- * Convert "HH:mm" or "HH:mm:ss" into a Date object
- * compatible with @db.Time column
+ * Convert "HH:mm" or "HH:mm:ss" into a Date object for @db.Time.
+ * Uses UTC and zero ms so Prisma equality checks match.
  */
 function timeToDate(timeStr: string): Date {
   const clean = timeStr.trim().length === 5
     ? `${timeStr.trim()}:00`
     : timeStr.trim()
+  const d = new Date(`1970-01-01T${clean}Z`)
+  d.setUTCMilliseconds(0)
+  return d
+}
 
-  // For @db.Time Prisma expects a Date object
-  // It ignores the date part and only stores time
-  return new Date(`1970-01-01T${clean}Z`)
+/** Parse YYYY-MM-DD as calendar date, return Date at midnight UTC (no TZ flip). */
+function parseDateOnly(selectedDate: string): Date {
+  const parts = selectedDate.trim().split("-")
+  if (parts.length !== 3) {
+    return new Date(NaN)
+  }
+  const [y, m, d] = parts.map(Number)
+  const dateObj = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0))
+  return dateObj
 }
 
 export async function POST(req: Request) {
@@ -54,7 +65,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const dateObj = new Date(selectedDate)
+    const dateObj = parseDateOnly(selectedDate)
 
     if (isNaN(dateObj.getTime())) {
       return NextResponse.json(
@@ -65,6 +76,8 @@ export async function POST(req: Request) {
 
     const startTimeObj = timeToDate(startTime)
     const endTimeObj = timeToDate(endTime)
+    startTimeObj.setUTCMilliseconds(0)
+    endTimeObj.setUTCMilliseconds(0)
 
     if (startTimeObj >= endTimeObj) {
       return NextResponse.json(
@@ -106,6 +119,13 @@ export async function POST(req: Request) {
         sessionType: SessionType.video_call,
         issueDescription: issueDescription ?? null,
       },
+    })
+
+    // Create notification for therapist
+    await createNotification({
+      userId: tId,
+      type: "booking_request",
+      message: "You have a new booking request.",
     })
 
     return NextResponse.json(newSession, { status: 201 })

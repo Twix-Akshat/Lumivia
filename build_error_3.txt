@@ -1,0 +1,23 @@
+
+> therapy-project@0.1.0 build
+> next build
+
+   ▲ Next.js 16.0.6 (Turbopack)
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 3.0s
+   Running TypeScript ...
+Failed to compile.
+
+./prisma.config.ts:7:3
+Type error: Object literal may only specify known properties, and 'migrate' does not exist in type 'PrismaConfig'.
+
+[0m [90m  5 |[39m   schema[33m:[39m [32m"prisma/schema.prisma"[39m[33m,[39m
+ [90m  6 |[39m
+[31m[1m>[22m[39m[90m  7 |[39m   migrate[33m:[39m {
+ [90m    |[39m   [31m[1m^[22m[39m
+ [90m  8 |[39m     datasourceUrl[33m:[39m process[33m.[39menv[33m.[39m[33mDATABASE_URL[39m[33m![39m[33m,[39m
+ [90m  9 |[39m   }[33m,[39m
+ [90m 10 |[39m })[33m;[39m[0m
+Next.js build worker exited with code: 1 and signal: null

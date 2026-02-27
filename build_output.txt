@@ -1,0 +1,146 @@
+﻿node.exe : [baseline-
+browser-mapping] The 
+data in this module 
+is over two months 
+old.  To ensure 
+accurate Baseline 
+data, please update: 
+`npm i baseline-brows
+er-mapping@latest -D`
+At C:\Program Files\n
+odejs\npx.ps1:29 
+char:3
++   & $NODE_EXE 
+$NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ([baseli   
+ ne-brows...ping@    
+latest -D`:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+   Γû▓ Next.js 16.0.6 (Turbopack)
+   - Environments: .env
+
+   Creating an optimized production build ...
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+ Γ£ô Compiled successfully in 6.9s
+   Running TypeScript ...
+Failed to compile.
+
+.next/dev/types/valid
+ator.ts:216:31
+Type error: Type 
+'typeof import("C:/Us
+ers/patel/OneDrive/De
+sktop/Darshan Univers
+ity/SEM-8/therapy-pro
+ject/therapy-project/
+app/api/journals/[id]
+/route")' does not 
+satisfy the 
+constraint 'RouteHand
+lerConfig<"/api/journ
+als/[id]">'.
+  Types of property 
+'GET' are 
+incompatible.
+    Type '(req: 
+NextRequest, { 
+params }: { params: 
+{ id: string; }; }) 
+=> Promise<NextRespon
+se<{ id: number; 
+createdAt: Date; 
+patientId: number; 
+title: string | 
+null; entryText: 
+string; moodValue: 
+number | null; tags: 
+string | null; }> | 
+NextResponse<...>>' 
+is not assignable to 
+type '(request: 
+NextRequest, 
+context: { params: 
+Promise<{ id: 
+string; }>; }) => 
+void | Response | 
+Promise<void | 
+Response>'.
+      Types of 
+parameters '__1' and 
+'context' are 
+incompatible.
+        Type '{ 
+params: Promise<{ 
+id: string; }>; }' 
+is not assignable to 
+type '{ params: { 
+id: string; }; }'.
+          Types of 
+property 'params' 
+are incompatible.
+            Property 
+'id' is missing in 
+type 'Promise<{ id: 
+string; }>' but 
+required in type '{ 
+id: string; }'.
+
+[0m [90m 214 
+|[39m   type __IsExp
+ected[33m<[39m[33m
+Specific[39m 
+[36mextends[39m [3
+3mRouteHandlerConfig
+[39m[33m<[39m[32m"
+/api/journals/[id]"[
+39m[33m>>[39m 
+[33m=[39m 
+[33mSpecific[39m
+ [90m 215 |[39m   
+[36mconst[39m 
+handler [33m=[39m 
+{} [36mas[39m 
+[36mtypeof[39m [36
+mimport[39m([32m"..
+/../../app/api/journa
+ls/[id]/route.js"[39
+m)
+[31m[1m>[22m[39m
+[90m 216 |[39m   
+type __Check 
+[33m=[39m __IsExpec
+ted[33m<[39m[36mty
+peof[39m 
+handler[33m>[39m
+ [90m     |[39m    
+                     
+      
+[31m[1m^[22m[39m
+ [90m 217 |[39m   
+[90m// 
+@ts-ignore[39m
+ [90m 218 |[39m   
+type __Unused 
+[33m=[39m __Check
+ [90m 219 |[39m 
+}[0m
+Next.js build worker 
+exited with code: 1 
+and signal: null

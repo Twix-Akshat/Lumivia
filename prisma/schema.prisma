@@ -1,0 +1,329 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int       @id @default(autoincrement()) @map("user_id")
+  email             String    @unique
+  passwordHash      String?   @map("password_hash")
+  oauthGoogleId     String?   @map("oauth_google_id")
+  name              String?
+  image             String?
+  emailVerified     DateTime? @map("email_verified")
+  role              Role      @default(patient)
+  fullName          String    @map("full_name")
+  profilePictureUrl String?   @map("profile_picture_url")
+  gender            Gender?
+  dateOfBirth       DateTime? @map("date_of_birth") @db.Date
+  phoneNumber       String?   @map("phone_number")
+  aboutBio          String?   @map("about_bio")
+  
+  // Therapist specific fields
+  licenseNumber     String?   @map("license_number")
+  specialization    String?
+  consultationFee   Decimal?  @map("consultation_fee") @db.Decimal(10, 2)
+  experienceYears   Int?      @map("experience_years")
+  verificationStatus VerificationStatus? @map("verification_status")
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  therapistAvailability TherapistAvailability[]
+  patientSessions       Session[] @relation("PatientSessions")
+  therapistSessions     Session[] @relation("TherapistSessions")
+  sentMessages          Message[] @relation("SentMessages")
+  receivedMessages      Message[] @relation("ReceivedMessages")
+  therapistNotesCreated TherapistNote[] @relation("TherapistNotesCreated")
+  therapistNotesAbout   TherapistNote[] @relation("TherapistNotesAbout")
+  journals              Journal[]
+  assessmentResults     AssessmentResult[]
+  paymentsMade          Payment[] @relation("PaymentsMade")
+  paymentsReceived      Payment[] @relation("PaymentsReceived")
+  wellnessContent       WellnessContent[]
+  notifications         Notification[]
+  activityLogs          ActivityLog[]
+  feedbackGiven         Feedback[] @relation("FeedbackGiven")
+  feedbackReceived      Feedback[] @relation("FeedbackReceived")
+  mediaUploads          MediaUpload[]
+
+  // NextAuth specific (keeping compatible)
+  accounts              Account[]
+  
+  @@map("users")
+}
+
+model TherapistAvailability {
+  id          Int      @id @default(autoincrement()) @map("availability_id")
+  therapistId Int      @map("therapist_id")
+  dayOfWeek   String   @map("day_of_week") // Enum in schema but keeping string for simplicity or creating Enum
+  startTime   DateTime @map("start_time") @db.Time
+  endTime     DateTime @map("end_time") @db.Time
+
+  therapist   User     @relation(fields: [therapistId], references: [id])
+
+  @@map("therapist_availability")
+}
+
+model Session {
+  id               Int       @id @default(autoincrement()) @map("session_id")
+  patientId        Int       @map("patient_id")
+  therapistId      Int       @map("therapist_id")
+  scheduledDate    DateTime  @map("scheduled_date") @db.Date
+  startTime        DateTime  @map("start_time") @db.Time
+  endTime          DateTime  @map("end_time") @db.Time
+  status           SessionStatus
+  sessionType      SessionType @map("session_type")
+  issueDescription String?   @map("issue_description")
+  meetingRoomId  String?
+  sessionSummary   String?   @map("session_summary")
+  completedAt      DateTime? @map("completed_at")
+
+  patient          User      @relation("PatientSessions", fields: [patientId], references: [id])
+  therapist        User      @relation("TherapistSessions", fields: [therapistId], references: [id])
+  messages         Message[]
+  payments         Payment[]
+  feedback         Feedback?
+
+  @@map("sessions")
+}
+
+model Message {
+  id             BigInt   @id @default(autoincrement()) @map("message_id")
+  sessionId      Int?     @map("session_id")
+  senderId       Int      @map("sender_id")
+  receiverId     Int      @map("receiver_id")
+  messageBody    String   @map("message_body")
+  attachmentPath String?  @map("attachment_path")
+  sentAt         DateTime @map("sent_at")
+  readStatus     Boolean  @map("read_status") @default(false)
+
+  session        Session? @relation(fields: [sessionId], references: [id])
+  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver       User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}
+
+model TherapistNote {
+  id          Int      @id @default(autoincrement()) @map("note_id")
+  therapistId Int      @map("therapist_id")
+  patientId   Int      @map("patient_id")
+  noteContent String   @map("note_content")
+  createdAt   DateTime @map("created_at")
+
+  therapist   User     @relation("TherapistNotesCreated", fields: [therapistId], references: [id])
+  patient     User     @relation("TherapistNotesAbout", fields: [patientId], references: [id])
+
+  @@map("therapist_notes")
+}
+
+model Journal {
+  id        Int      @id @default(autoincrement()) @map("journal_id")
+  patientId Int      @map("patient_id")
+  title     String?
+  entryText String   @map("entry_text")
+  moodValue Int?     @map("mood_value")
+  tags      String?
+  createdAt DateTime @map("created_at")
+
+  patient   User     @relation(fields: [patientId], references: [id])
+
+  @@map("journals")
+}
+
+model Assessment {
+  assessment_id            Int      @id @default(autoincrement()) @map("assessment_id")
+  name          String
+  description   String?
+  questionsJson Json     @map("questions_json")
+
+  results       AssessmentResult[]
+
+  @@map("assessments")
+}
+
+model AssessmentResult {
+  assessment_result_id            Int      @id @default(autoincrement()) @map("assessment_result_id")
+  patientId     Int      @map("patient_id")
+  assessmentId  Int      @map("assessment_id")
+  numericalScore Int     @map("numerical_score")
+  severityLevel String   @map("severity_level")
+  completedAt   DateTime @map("completed_at")
+
+  patient       User       @relation(fields: [patientId], references: [id])
+  assessment    Assessment @relation(fields: [assessmentId], references: [assessment_id])
+
+  @@map("assessment_results")
+}
+
+model Payment {
+  id                  Int      @id @default(autoincrement()) @map("payment_id")
+  sessionId           Int?     @map("session_id")
+  patientId           Int      @map("patient_id")
+  therapistId         Int      @map("therapist_id")
+  amount              Decimal  @db.Decimal(10, 2)
+  paymentStatus       PaymentStatus @map("payment_status")
+  paymentMethod       String?  @map("payment_method") // Enum in schema but simple string here
+  transactionReference String  @unique @map("transaction_reference")
+  paymentDate         DateTime @map("payment_date")
+
+  session             Session? @relation(fields: [sessionId], references: [id])
+  patient             User     @relation("PaymentsMade", fields: [patientId], references: [id])
+  therapist           User     @relation("PaymentsReceived", fields: [therapistId], references: [id])
+
+  @@map("payments")
+}
+
+model WellnessContent {
+  id          Int      @id @default(autoincrement()) @map("content_id")
+  authorId    Int      @map("author_id")
+  title       String
+  description String?
+  contentType ContentType @map("content_type")
+  contentBody String?  @map("content_body")
+  videoUrl    String?  @map("video_url")
+  topics      String?
+  createdAt   DateTime @map("created_at")
+
+  author      User     @relation(fields: [authorId], references: [id])
+
+  @@map("wellness_content")
+}
+
+model Notification {
+  notification_id              Int      @id @default(autoincrement()) @map("notification_id")
+  userId          Int      @map("user_id")
+  notificationType NotificationType @map("notification_type")
+  message         String
+  readStatus      Boolean  @map("read_status") @default(false)
+  createdAt       DateTime @map("created_at") @default(now())
+
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id           BigInt   @id @default(autoincrement()) @map("log_id")
+  userId       Int?     @map("user_id")
+  activityType String   @map("activity_type")
+  deviceInfo   String?  @map("device_info")
+  ipAddress    String   @map("ip_address")
+  loggedAt     DateTime @map("logged_at")
+
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
+}
+
+model Feedback {
+  feedback_id           Int      @id @default(autoincrement()) @map("feedback_id")
+
+  patientId    Int      @map("patient_id")
+  therapistId  Int      @map("therapist_id")
+  sessionId    Int      @unique @map("session_id")   // prevents duplicate feedback
+
+  rating       Int
+  feedbackText String?  @map("feedback_text")
+
+  submittedAt  DateTime @default(now()) @map("submitted_at")
+
+  patient      User     @relation("FeedbackGiven", fields: [patientId], references: [id])
+  therapist    User     @relation("FeedbackReceived", fields: [therapistId], references: [id])
+  session      Session  @relation(fields: [sessionId], references: [id])
+
+  @@map("feedback")
+}
+
+model MediaUpload {
+  id         Int      @id @default(autoincrement()) @map("media_id")
+  userId     Int      @map("user_id")
+  filePath   String   @map("file_path")
+  fileType   String   @map("file_type")
+  uploadDate DateTime @map("upload_date")
+
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("media_uploads")
+}
+
+// NextAuth Required Models (adapted)
+model Account {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @map("user_id")
+  type               String
+  provider           String
+  providerAccountId  String   @map("provider_account_id")
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// Enums
+
+enum Role {
+  patient
+  therapist
+  admin
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+}
+
+enum VerificationStatus {
+  Pending
+  Verified
+  Rejected
+}
+
+enum SessionStatus {
+  available
+  pending
+  accepted
+  completed
+  cancelled
+  declined
+}
+
+enum SessionType {
+  video_call
+  audio_call
+  text_consultation
+}
+
+enum PaymentStatus {
+  paid
+  failed
+  pending
+}
+
+enum ContentType {
+  article
+  video
+  meditation_audio
+}
+
+enum NotificationType {
+  booking_request
+  session_accepted
+  payment_success
+  general
+}
