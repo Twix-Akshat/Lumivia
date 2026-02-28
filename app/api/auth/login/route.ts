@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
+import { logActivity } from "@/lib/activity-logger";
 
 export async function POST(req: Request) {
     try {
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
         }
 
         // Login success
+        await logActivity(user.id, "LOGIN", req);
         return NextResponse.json(
             {
                 user: {

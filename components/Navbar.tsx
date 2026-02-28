@@ -115,7 +115,7 @@ export default function Navbar({ user }: NavbarProps) {
     if (user) {
       fetchNotifications()
       fetchUnreadCount()
-      
+
       // Poll for new notifications every 30 seconds
       const interval = setInterval(() => {
         fetchUnreadCount()
@@ -237,8 +237,12 @@ export default function Navbar({ user }: NavbarProps) {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Brain className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary p-1">
+            <img
+              src="/lumivia_logo.png"
+              alt="Lumivia"
+              className="h-full w-full object-contain"
+            />
           </div>
           <span className="font-heading text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
             Lumivia
@@ -254,9 +258,9 @@ export default function Navbar({ user }: NavbarProps) {
               {/* Notifications Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="relative hidden md:flex hover:bg-accent"
                   >
                     <Bell className="h-4.5 w-4.5 text-muted-foreground" />
@@ -271,8 +275,8 @@ export default function Navbar({ user }: NavbarProps) {
                   </Button>
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent 
-                  align="end" 
+                <DropdownMenuContent
+                  align="end"
                   className="w-[380px] p-0 max-h-[500px] overflow-hidden"
                 >
                   {/* Header */}
@@ -324,7 +328,7 @@ export default function Navbar({ user }: NavbarProps) {
                         {notifications.map((notification) => {
                           const Icon = getNotificationIcon(notification.notificationType)
                           const colorClass = getNotificationColor(notification.notificationType)
-                          
+
                           return (
                             <div
                               key={notification.notification_id}
@@ -532,55 +536,55 @@ export default function Navbar({ user }: NavbarProps) {
                               </Button>
                             )}
                           </div>
-                          
+
                           <ScrollArea className="h-[300px]">
                             <div className="space-y-1 px-2">
-                            {notifications.length === 0 ? (
-                              <div className="text-center py-6 px-4">
-                                <p className="text-xs text-muted-foreground">No notifications</p>
-                              </div>
-                            ) : (
-                              notifications.slice(0, 5).map((notification) => {
-                                const Icon = getNotificationIcon(notification.notificationType)
-                                const colorClass = getNotificationColor(notification.notificationType)
-                                
-                                return (
-                                  <div
-                                    key={notification.notification_id}
-                                    className={cn(
-                                      "rounded-lg p-2.5 text-xs space-y-1.5 relative group",
-                                      !notification.readStatus ? "bg-primary/5" : "bg-muted/30"
-                                    )}
-                                    onClick={() => !notification.readStatus && markAsRead(notification.notification_id)}
-                                  >
-                                    <div className="flex gap-2">
-                                      <div className={cn("flex-shrink-0 rounded-full p-1.5 h-7 w-7 flex items-center justify-center", colorClass)}>
-                                        <Icon className="h-3.5 w-3.5" />
+                              {notifications.length === 0 ? (
+                                <div className="text-center py-6 px-4">
+                                  <p className="text-xs text-muted-foreground">No notifications</p>
+                                </div>
+                              ) : (
+                                notifications.slice(0, 5).map((notification) => {
+                                  const Icon = getNotificationIcon(notification.notificationType)
+                                  const colorClass = getNotificationColor(notification.notificationType)
+
+                                  return (
+                                    <div
+                                      key={notification.notification_id}
+                                      className={cn(
+                                        "rounded-lg p-2.5 text-xs space-y-1.5 relative group",
+                                        !notification.readStatus ? "bg-primary/5" : "bg-muted/30"
+                                      )}
+                                      onClick={() => !notification.readStatus && markAsRead(notification.notification_id)}
+                                    >
+                                      <div className="flex gap-2">
+                                        <div className={cn("flex-shrink-0 rounded-full p-1.5 h-7 w-7 flex items-center justify-center", colorClass)}>
+                                          <Icon className="h-3.5 w-3.5" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className={cn(
+                                            "text-xs leading-snug",
+                                            !notification.readStatus ? "font-medium" : "text-muted-foreground"
+                                          )}>
+                                            {notification.message}
+                                          </p>
+                                          <p className="text-[10px] text-muted-foreground mt-1">
+                                            {formatTimeAgo(notification.createdAt)}
+                                          </p>
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                                          onClick={(e) => deleteNotification(notification.notification_id, e)}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
                                       </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className={cn(
-                                          "text-xs leading-snug",
-                                          !notification.readStatus ? "font-medium" : "text-muted-foreground"
-                                        )}>
-                                          {notification.message}
-                                        </p>
-                                        <p className="text-[10px] text-muted-foreground mt-1">
-                                          {formatTimeAgo(notification.createdAt)}
-                                        </p>
-                                      </div>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                                        onClick={(e) => deleteNotification(notification.notification_id, e)}
-                                      >
-                                        <X className="h-3 w-3" />
-                                      </Button>
                                     </div>
-                                  </div>
-                                )
-                              })
-                            )}
+                                  )
+                                })
+                              )}
                             </div>
                           </ScrollArea>
                         </div>

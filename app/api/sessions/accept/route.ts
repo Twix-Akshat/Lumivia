@@ -3,6 +3,7 @@ import crypto from "crypto";
 import prisma from "../../../../lib/prisma";
 import { SessionStatus } from "@prisma/client";
 import { createNotification } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity-logger";
 
 export async function POST(req: NextRequest) {
   const { sessionId } = await req.json();
@@ -22,6 +23,8 @@ export async function POST(req: NextRequest) {
     type: "session_accepted",
     message: "Your therapy session has been accepted.",
   });
+
+  await logActivity(session.therapistId, "SESSION_ACCEPTED", req);
 
   return NextResponse.json({ success: true, session });
 }

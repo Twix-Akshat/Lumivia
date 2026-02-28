@@ -32,6 +32,14 @@ import { SessionCard } from "./session-card"
 import { TherapistCard } from "./therapist-card"
 import { useAlert } from "@/components/ui/custom-alert"
 import { ConfirmationDialog } from "@/components/confirmation-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Noto_Sans_New_Tai_Lue } from "next/font/google"
 
 type SessionWithTherapist = {
@@ -80,6 +88,8 @@ export default function PatientDashboard() {
   const [wellnessTrend, setWellnessTrend] = useState<string | null>(null)
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
   const [pendingCancelId, setPendingCancelId] = useState<number | null>(null)
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false)
+  const [pendingSessionId, setPendingSessionId] = useState<number | null>(null)
 
   const upcomingSessions = sessions.filter(
     (s) => s.status === "accepted" || s.status === "pending"
@@ -190,6 +200,19 @@ export default function PatientDashboard() {
     } catch {
       showAlert("Cannot reach the server. Please try again.", "danger")
     }
+  }
+
+  function handleJoinSession(sessionId: number) {
+    setPendingSessionId(sessionId)
+    setJoinDialogOpen(true)
+  }
+
+  function confirmJoinSession() {
+    if (pendingSessionId) {
+      router.push(`/session/${pendingSessionId}/video`)
+    }
+    setJoinDialogOpen(false)
+    setPendingSessionId(null)
   }
 
 
@@ -392,6 +415,7 @@ export default function PatientDashboard() {
                   personRole="therapist"
                   meetingRoomId={s.meetingRoomId}
                   onCancel={() => handleCancel(s.id)}
+                  onJoin={() => handleJoinSession(s.id)}
                 />
               ))}
             </div>
@@ -465,6 +489,39 @@ export default function PatientDashboard() {
         isDangerous={true}
         icon="warning"
       />
+
+      {/* Join Session - Wait for Therapist Dialog */}
+      <Dialog open={joinDialogOpen} onOpenChange={(open) => {
+        setJoinDialogOpen(open)
+        if (!open) setPendingSessionId(null)
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Video className="h-5 w-5 text-primary" />
+              Before You Join
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-sm leading-relaxed">
+              Please wait for the therapist to log in. Your meeting will start soon once the therapist is ready.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800 p-3 flex items-start gap-3">
+            <span className="text-blue-600 text-lg mt-0.5">ℹ️</span>
+            <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+              The therapist is the moderator of this session. Please be patient while they set up the meeting room. You will be able to join once they are ready.
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => { setJoinDialogOpen(false); setPendingSessionId(null) }}>
+              Cancel
+            </Button>
+            <Button onClick={confirmJoinSession} className="gap-1.5">
+              <Video className="h-4 w-4" />
+              Continue to Session
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

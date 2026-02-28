@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity-logger";
 
 export async function POST(req: Request) {
   try {
@@ -34,9 +35,10 @@ export async function POST(req: Request) {
         fullName: fullName,
         email,
         passwordHash: hashedPassword,
-        // Ensure role is cast to the Enum type if TypeScript complains, 
-        // but passing string usually works if it matches enum value
         role: role.toLowerCase() as any,
+        ...(role.toLowerCase() === "therapist" && {
+          verificationStatus: "Pending",
+        }),
       },
     });
 
@@ -46,6 +48,9 @@ export async function POST(req: Request) {
       type: "general",
       message: `Welcome to the platform, ${user.fullName}! Your account has been created successfully.`,
     });
+
+    // Log activity
+    await logActivity(user.id, "REGISTER", req);
 
     return NextResponse.json(
       {

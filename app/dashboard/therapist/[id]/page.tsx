@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import {
   Heart,
   Clock,
@@ -16,6 +17,14 @@ import {
   MapPin,
 } from "lucide-react"
 import { useState, useEffect, use, useMemo } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { useAlert } from "@/components/ui/custom-alert"
 
 interface AvailabilitySlot {
   id: number
@@ -98,16 +107,104 @@ function getInitials(name: string) {
   return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
 }
 
+
+
 export default function TherapistPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
+  const { data: session } = useSession()
+  const patientId = session?.user?.id
   const { id } = use(params)
   const router = useRouter()
+  const { showAlert } = useAlert()
   const [therapist, setTherapist] = useState<Therapist | null>(null)
   const [loading, setLoading] = useState(true)
   const [liked, setLiked] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [selectedDate, setSelectedDate] = useState("")
+  const [slots, setSlots] = useState<{ start: string; end: string }[]>([])
+  const [bookingLoading, setBookingLoading] = useState(false)
+  const [slotsLoading, setSlotsLoading] = useState(false)
+
+  // Fetch available slots for a given date
+  const fetchSlots = async (date: string) => {
+    setSlotsLoading(true)
+    try {
+      const res = await fetch(`/api/therapist/${id}/slots?date=${date}`)
+      if (!res.ok) throw new Error("Failed to fetch slots")
+      const data = await res.json()
+      setSlots(data.slots || [])
+    } catch {
+      setSlots([])
+    } finally {
+      setSlotsLoading(false)
+    }
+  }
+
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date)
+    if (date) fetchSlots(date)
+    else setSlots([])
+  }
+
+  // Format time for slot display (e.g. "09:00" -> "9:00 AM")
+  function formatSlotTime(time: string): string {
+    const [h, m] = time.split(":").map(Number)
+    const hour = h % 12 || 12
+    const ampm = h >= 12 ? "PM" : "AM"
+    return `${hour}:${String(m).padStart(2, "0")} ${ampm}`
+  }
+
+  // Handle booking - Direct booking without confirmation
+  const handleBook = async (slot: { start: string; end: string }) => {
+    if (!patientId) {
+      showAlert("Please sign in to book a session.", "warning")
+      return
+    }
+
+    try {
+      setBookingLoading(true)
+
+      const res = await fetch("/api/sessions/book", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          therapistId: id,
+          patientId,
+          selectedDate,
+          startTime: slot.start,
+          endTime: slot.end,
+          issueDescription: "General consultation",
+        }),
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok) {
+        showAlert(data?.error || "Booking failed", "danger")
+        return
+      }
+
+      showAlert("Session booked successfully!", "success")
+      setOpen(false)
+
+      // Refresh slots to show updated availability
+      if (selectedDate) {
+        fetchSlots(selectedDate)
+      }
+    } catch (error) {
+      console.error("Booking error:", error)
+      showAlert("Cannot reach the server. Please try again.", "danger")
+    } finally {
+      setBookingLoading(false)
+    }
+  }
+
+
 
   useEffect(() => {
     fetch(`/api/therapist/${id}`, { cache: "no-store" })
@@ -363,7 +460,10 @@ export default function TherapistPage({
           {/* Sidebar CTA */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
-              <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
+              <button
+                onClick={() => setOpen(true)}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+              >
                 Book a Session
               </button>
 
@@ -620,6 +720,84 @@ export default function TherapistPage({
           </div>
         </div>
       </div>
+      {/* Booking Modal */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Book Session with {therapist.fullName}
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Date Picker */}
+          <div className="mt-3">
+            <label className="text-sm font-medium">
+              Select Date
+            </label>
+            <input
+              type="date"
+              className="w-full mt-1 border rounded-md px-3 py-2 text-sm"
+              value={selectedDate}
+              min={new Date().toISOString().split("T")[0]}
+              onChange={(e) =>
+                handleDateChange(e.target.value)
+              }
+            />
+          </div>
+
+          {/* Slots Section */}
+          <div className="mt-4 max-h-72 overflow-y-auto space-y-4">
+            {slotsLoading && (
+              <p className="text-sm text-muted-foreground">
+                Loading available slots...
+              </p>
+            )}
+
+            {!slotsLoading && selectedDate && slots.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No available slots for this date.
+              </p>
+            )}
+
+            {!slotsLoading && slots.length > 0 && (() => {
+              const groups = [
+                { label: "🌅 Morning", emoji: "", slots: slots.filter(s => parseInt(s.start) < 12) },
+                { label: "☀️ Afternoon", emoji: "", slots: slots.filter(s => { const h = parseInt(s.start); return h >= 12 && h < 17 }) },
+                { label: "🌆 Evening", emoji: "", slots: slots.filter(s => parseInt(s.start) >= 17) },
+              ]
+              return groups
+                .filter(g => g.slots.length > 0)
+                .map(group => (
+                  <div key={group.label}>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                      {group.label}
+                    </p>
+                    <div className="space-y-2">
+                      {group.slots.map((slot, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between border rounded-lg px-3 py-2"
+                        >
+                          <div className="text-sm font-medium">
+                            {formatSlotTime(slot.start)} – {formatSlotTime(slot.end)}
+                          </div>
+                          <Button
+                            size="sm"
+                            disabled={bookingLoading}
+                            onClick={() => handleBook(slot)}
+                          >
+                            {bookingLoading ? "Booking..." : "Book"}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
+
   )
 }

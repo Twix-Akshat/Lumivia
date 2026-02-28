@@ -15,12 +15,30 @@ type Assessment = {
   description: string
 }
 
+type QuestionOption = {
+  text?: string
+  label?: string
+  value?: number
+  score?: number
+  points?: number
+}
+
 type Question = {
   question: string
-  options: {
-    text: string
-    value: number
-  }[]
+  options: QuestionOption[]
+}
+
+/** Get display text from an option (supports text, label fields) */
+function getOptionText(opt: QuestionOption): string {
+  return opt.text || opt.label || ''
+}
+
+/** Get numeric value from an option (supports value, score, points fields) */
+function getOptionValue(opt: QuestionOption): number {
+  if (typeof opt.value === 'number') return opt.value
+  if (typeof opt.score === 'number') return opt.score
+  if (typeof opt.points === 'number') return opt.points
+  return 0
 }
 
 const assessmentIcons: { [key: number]: React.ReactNode } = {
@@ -297,27 +315,30 @@ export default function AssessmentPage() {
 
                     <RadioGroup
                       onValueChange={(v) => setAnswer(i, Number(v))}
-                      value={answers[i] !== null ? String(answers[i]) : ''}
+                      value={answers[i] !== null ? String(answers[i]) : undefined}
                     >
                       <div className="space-y-3">
-                        {q.options.map((opt, j) => (
-                          <div
-                            key={`${selectedAssessment.assessment_id}-${i}-${j}`}
-                            className="group flex items-start gap-3 p-3 rounded-lg hover:bg-primary/5 cursor-pointer transition-colors"
-                          >
-                            <RadioGroupItem
-                              value={String(opt.value)}
-                              id={`${i}-${j}`}
-                              className="mt-1"
-                            />
-                            <Label
-                              htmlFor={`${i}-${j}`}
-                              className="flex-1 text-base cursor-pointer text-foreground font-normal"
+                        {q.options.map((opt, j) => {
+                          const optValue = getOptionValue(opt)
+                          const optText = getOptionText(opt)
+                          const radioId = `q${selectedAssessment.assessment_id}-${i}-opt${j}`
+                          return (
+                            <label
+                              key={radioId}
+                              htmlFor={radioId}
+                              className="group flex items-start gap-3 p-3 rounded-lg hover:bg-primary/5 cursor-pointer transition-colors"
                             >
-                              {opt.text}
-                            </Label>
-                          </div>
-                        ))}
+                              <RadioGroupItem
+                                value={String(optValue)}
+                                id={radioId}
+                                className="mt-1"
+                              />
+                              <span className="flex-1 text-base text-foreground font-normal">
+                                {optText}
+                              </span>
+                            </label>
+                          )
+                        })}
                       </div>
                     </RadioGroup>
                   </div>

@@ -27,7 +27,10 @@ export async function GET(req: Request) {
 
     // 2️⃣ All therapists with availability
     const therapists = await prisma.user.findMany({
-      where: { role: "therapist" },
+      where: {
+        role: "therapist",
+        verificationStatus: "Verified",
+      },
       include: {
         therapistAvailability: true
       }

@@ -1,4 +1,4 @@
-import Link from "next/link"
+
 import { Button } from "@/components/ui/button"
 import { Calendar, Video } from "lucide-react"
 import { firstLetterCapitalize } from "@/lib/utils"
@@ -91,13 +91,11 @@ export function SessionCard({
           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColor}`}>
             {firstLetterCapitalize(status)}
           </span>
-          {canJoin && sessionId && (
-            <Link href={`/session/${sessionId}/video`}>
-              <Button size="sm" variant="default" className="gap-1">
-                <Video className="h-3.5 w-3.5" />
-                Join
-              </Button>
-            </Link>
+          {canJoin && sessionId && onJoin && (
+            <Button size="sm" variant="default" className="gap-1" onClick={onJoin}>
+              <Video className="h-3.5 w-3.5" />
+              Join
+            </Button>
           )}
           {onCancel && status !== "completed" && status !== "cancelled" && (
             <Button size="sm" variant="outline" onClick={onCancel}>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
 import { SessionStatus } from "@prisma/client";
 import { createNotification } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity-logger";
 
 export async function POST(req: NextRequest) {
     const { sessionId } = await req.json();
@@ -19,6 +20,8 @@ export async function POST(req: NextRequest) {
         type: "general",
         message: "Your therapy session request has been declined.",
     });
+
+    await logActivity(session.therapistId, "SESSION_DECLINED", req);
 
     return NextResponse.json({ success: true, session });
 }

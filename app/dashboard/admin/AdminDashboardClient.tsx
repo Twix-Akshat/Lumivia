@@ -24,7 +24,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import {
   Users,
   CalendarDays,
@@ -36,6 +44,12 @@ import {
   UserCheck,
   UserX,
   Clock,
+  Eye,
+  Star,
+  Award,
+  Phone,
+  Loader2,
+  Trash2,
 } from "lucide-react"
 import { StatCard } from "./stat-card"
 
@@ -51,6 +65,11 @@ interface UserRow {
   verificationStatus: "Pending" | "Verified" | "Rejected" | null
   specialization: string | null
   consultationFee: number | null
+  experienceYears: number | null
+  licenseNumber: string | null
+  aboutBio: string | null
+  gender: string | null
+  profilePictureUrl: string | null
 }
 
 interface ActivityRow {
@@ -86,6 +105,13 @@ const activityTypeLabels: Record<string, { label: string; className: string }> =
   LOGOUT: { label: "Logout", className: "bg-gray-100 text-gray-800 border-gray-200" },
   REGISTER: { label: "Register", className: "bg-green-100 text-green-800 border-green-200" },
   UPDATE_PROFILE: { label: "Profile Update", className: "bg-orange-100 text-orange-800 border-orange-200" },
+  SESSION_BOOKED: { label: "Session Booked", className: "bg-indigo-100 text-indigo-800 border-indigo-200" },
+  SESSION_ACCEPTED: { label: "Session Accepted", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+  SESSION_DECLINED: { label: "Session Declined", className: "bg-red-100 text-red-800 border-red-200" },
+  SESSION_CANCELLED: { label: "Session Cancelled", className: "bg-rose-100 text-rose-800 border-rose-200" },
+  FEEDBACK_SUBMITTED: { label: "Feedback", className: "bg-amber-100 text-amber-800 border-amber-200" },
+  VERIFICATION_STATUS_CHANGED: { label: "Verification Changed", className: "bg-violet-100 text-violet-800 border-violet-200" },
+  ROLE_CHANGED: { label: "Role Changed", className: "bg-purple-100 text-purple-800 border-purple-200" },
 }
 
 function getInitials(name: string) {
@@ -114,6 +140,10 @@ export default function AdminDashboardClient() {
   const [forbidden, setForbidden] = useState(false)
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [previewUser, setPreviewUser] = useState<UserRow | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewData, setPreviewData] = useState<any>(null)
 
   // Derived state for pending verifications from the users list is tricky if paginated.
   // We'll rely on what we have loaded or fetch specifically for verification tab if needed.
@@ -197,6 +227,36 @@ export default function AdminDashboardClient() {
       .finally(() => setUpdatingUserId(null))
   }
 
+  async function handlePreviewProfile(user: UserRow) {
+    setPreviewUser(user)
+    setPreviewOpen(true)
+    setPreviewLoading(true)
+    setPreviewData(null)
+    try {
+      const res = await fetch(`/api/therapist/${user.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setPreviewData(data)
+      }
+    } catch {
+      // Silently fail - preview will show basic info from user row
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  async function handleDeleteActivity(activityId: string) {
+    try {
+      const res = await fetch(`/api/activity-log/${activityId}`, { method: "DELETE" })
+      if (res.ok) {
+        setActivities((prev) => prev.filter((a) => a.id !== activityId))
+        setActivitiesTotal((prev) => prev - 1)
+      }
+    } catch {
+      // silently fail
+    }
+  }
+
   if (status === "loading" || loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -223,7 +283,7 @@ export default function AdminDashboardClient() {
     <div className="flex-1 space-y-8 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
           <p className="text-muted-foreground">
             Manage users, sessions, and platform activity.
           </p>
@@ -236,7 +296,7 @@ export default function AdminDashboardClient() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatCard
           title="Total Users"
           value={stats?.totalUsers ?? 0}
@@ -261,12 +321,12 @@ export default function AdminDashboardClient() {
           icon={CalendarDays}
           iconClassName="text-orange-600 bg-orange-100"
         />
-        {/* <StatCard
+        <StatCard
           title="Activities"
           value={stats?.totalActivities ?? 0}
           icon={Activity}
           iconClassName="text-purple-600 bg-purple-100"
-        /> */}
+        />
       </div>
 
       <Tabs defaultValue="users" className="space-y-4">
@@ -431,6 +491,9 @@ export default function AdminDashboardClient() {
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => handlePreviewProfile(user)}>
+                          <Eye className="mr-2 h-4 w-4" /> View Profile
+                        </Button>
                         <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => handleUpdateUser(user.id, "verificationStatus", "Rejected")}>
                           <UserX className="mr-2 h-4 w-4" /> Reject
                         </Button>
@@ -462,12 +525,13 @@ export default function AdminDashboardClient() {
                     <TableHead>Type</TableHead>
                     <TableHead className="hidden md:table-cell">IP Address</TableHead>
                     <TableHead>Time</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {activities.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
+                      <TableCell colSpan={5} className="h-24 text-center">
                         No activities found.
                       </TableCell>
                     </TableRow>
@@ -495,6 +559,16 @@ export default function AdminDashboardClient() {
                             <Clock className="h-3 w-3" />
                             {new Date(activity.loggedAt).toLocaleString()}
                           </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDeleteActivity(activity.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -529,6 +603,185 @@ export default function AdminDashboardClient() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Therapist Profile Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={(open) => {
+        setPreviewOpen(open)
+        if (!open) { setPreviewUser(null); setPreviewData(null) }
+      }}>
+        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Therapist Profile Preview</DialogTitle>
+            <DialogDescription>
+              Review this therapist's profile before making a verification decision.
+            </DialogDescription>
+          </DialogHeader>
+
+          {previewLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto space-y-5 pr-1">
+              {/* Header */}
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  {(previewData?.profilePictureUrl || previewUser?.profilePictureUrl) && (
+                    <AvatarImage src={previewData?.profilePictureUrl || previewUser?.profilePictureUrl} />
+                  )}
+                  <AvatarFallback className="text-lg">
+                    {getInitials(previewUser?.fullName || "")}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-lg font-semibold">{previewUser?.fullName}</p>
+                  <p className="text-sm text-muted-foreground">{previewUser?.email}</p>
+                  {previewUser?.verificationStatus && (
+                    <Badge variant="outline" className={cn("mt-1 capitalize font-normal", verificationColors[previewUser.verificationStatus])}>
+                      {previewUser.verificationStatus}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Details Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Award className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Specialization</span>
+                  </div>
+                  <p className="text-sm font-medium">{previewData?.specialization || previewUser?.specialization || "Not set"}</p>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Experience</span>
+                  </div>
+                  <p className="text-sm font-medium">
+                    {previewData?.experienceYears != null ? `${previewData.experienceYears} years` : "Not set"}
+                  </p>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">License Number</span>
+                  </div>
+                  <p className="text-sm font-medium">{previewData?.licenseNumber || previewUser?.licenseNumber || "Not provided"}</p>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-xs">₹</span>
+                    <span className="text-xs text-muted-foreground">Consultation Fee</span>
+                  </div>
+                  <p className="text-sm font-medium">
+                    {(previewData?.consultationFee ?? previewUser?.consultationFee) != null
+                      ? `₹${previewData?.consultationFee ?? previewUser?.consultationFee}`
+                      : "Not set"}
+                  </p>
+                </div>
+                {(previewData?.gender || previewUser?.gender) && (
+                  <div className="border rounded-lg p-3">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Gender</span>
+                    </div>
+                    <p className="text-sm font-medium">{previewData?.gender || previewUser?.gender}</p>
+                  </div>
+                )}
+                {(previewData?.phoneNumber || previewUser?.phoneNumber) && (
+                  <div className="border rounded-lg p-3">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Phone</span>
+                    </div>
+                    <p className="text-sm font-medium">{previewData?.phoneNumber || previewUser?.phoneNumber}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Bio */}
+              {(previewData?.aboutBio || previewUser?.aboutBio) && (
+                <div className="border rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground mb-1.5">About / Bio</p>
+                  <p className="text-sm text-foreground/80 leading-relaxed">
+                    {previewData?.aboutBio || previewUser?.aboutBio}
+                  </p>
+                </div>
+              )}
+
+              {/* Availability */}
+              {previewData?.therapistAvailability?.length > 0 && (
+                <div className="border rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground mb-2">Weekly Availability</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {previewData.therapistAvailability.map((slot: any) => (
+                      <Badge key={slot.id} variant="secondary" className="text-xs font-normal">
+                        {slot.dayOfWeek} {slot.startTime?.slice(11, 16)} - {slot.endTime?.slice(11, 16)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Reviews summary */}
+              {previewData?.totalReviews > 0 && (
+                <div className="border rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground mb-1.5">Reviews</p>
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+                    <span className="text-sm font-semibold">{previewData.averageRating}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({previewData.totalReviews} {previewData.totalReviews === 1 ? "review" : "reviews"})
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {previewData.completedSessionCount} sessions completed
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* No profile data warning */}
+              {!previewLoading && !previewData?.aboutBio && !previewData?.licenseNumber && !previewData?.specialization && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-3 flex items-start gap-3">
+                  <span className="text-amber-600 text-lg mt-0.5">⚠️</span>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                    This therapist has not completed their profile yet. Consider waiting for them to fill in their details before approving.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Footer with actions */}
+          {previewUser && (
+            <DialogFooter className="border-t pt-4 gap-2 sm:gap-0">
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                disabled={updatingUserId === previewUser.id}
+                onClick={() => {
+                  handleUpdateUser(previewUser.id, "verificationStatus", "Rejected")
+                  setPreviewOpen(false)
+                }}
+              >
+                <UserX className="mr-2 h-4 w-4" /> Reject
+              </Button>
+              <Button
+                size="sm"
+                disabled={updatingUserId === previewUser.id}
+                onClick={() => {
+                  handleUpdateUser(previewUser.id, "verificationStatus", "Verified")
+                  setPreviewOpen(false)
+                }}
+              >
+                <UserCheck className="mr-2 h-4 w-4" /> Approve
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

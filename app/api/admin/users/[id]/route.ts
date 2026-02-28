@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin"
 import prisma from "@/lib/prisma"
 import { createNotification } from "@/lib/notifications"
+import { logActivity } from "@/lib/activity-logger"
 
 export async function PATCH(
   req: Request,
@@ -65,6 +66,15 @@ export async function PATCH(
       type: "general",
       message: notificationMessage,
     });
+  }
+
+  // Log admin activity
+  const adminId = Number(session.user.id)
+  if (updateData.verificationStatus) {
+    await logActivity(adminId, "VERIFICATION_STATUS_CHANGED", req)
+  }
+  if (updateData.role) {
+    await logActivity(adminId, "ROLE_CHANGED", req)
   }
 
   return NextResponse.json(updated)

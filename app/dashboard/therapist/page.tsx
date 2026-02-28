@@ -105,6 +105,8 @@ export default function TherapistDashboard() {
   const [profileIncomplete, setProfileIncomplete] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [pendingDeleteNoteId, setPendingDeleteNoteId] = useState<number | null>(null)
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false)
+  const [pendingSessionId, setPendingSessionId] = useState<number | null>(null)
 
   const fetchPatientNotes = async (patientId: number) => {
     try {
@@ -328,6 +330,19 @@ export default function TherapistDashboard() {
     }
   }
 
+  function handleJoinSession(sessionId: number) {
+    setPendingSessionId(sessionId)
+    setJoinDialogOpen(true)
+  }
+
+  function confirmJoinSession() {
+    if (pendingSessionId) {
+      router.push(`/session/${pendingSessionId}/video`)
+    }
+    setJoinDialogOpen(false)
+    setPendingSessionId(null)
+  }
+
   if (loading) return <p className="p-8 text-center text-muted-foreground">Loading dashboard...</p>
 
   return (
@@ -470,7 +485,7 @@ export default function TherapistDashboard() {
                     personRole="patient"
                     issueDescription={session.issueDescription}
                     meetingRoomId={session.meetingRoomId}
-                    onJoin={() => session.meetingRoomId && router.push(`/session/${session.id}/video`)}
+                    onJoin={() => handleJoinSession(session.id)}
                     onMarkCompleted={() => handleMarkCompleted(session.id)}
                   />
                 ))}
@@ -496,7 +511,7 @@ export default function TherapistDashboard() {
                     personName={session.patient?.fullName || "Patient"}
                     personRole="patient"
                     issueDescription={session.issueDescription}
-                    onJoin={() => session.meetingRoomId && router.push(`/session/${session.id}/video`)}
+                    onJoin={() => handleJoinSession(session.id)}
                     onDecline={() => handleDecline(session.id)}
                     onAccept={() => handleAccept(session.id)}
                   />
@@ -799,6 +814,39 @@ export default function TherapistDashboard() {
         isDangerous={true}
         icon="trash"
       />
+
+      {/* Join Session - Google Login Reminder Dialog */}
+      <Dialog open={joinDialogOpen} onOpenChange={(open) => {
+        setJoinDialogOpen(open)
+        if (!open) setPendingSessionId(null)
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Video className="h-5 w-5 text-primary" />
+              Before You Join
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-sm leading-relaxed">
+              As the <span className="font-semibold text-foreground">moderator</span> of this session, you need to be signed in with your <span className="font-semibold text-foreground">Google account</span> in the video call to manage the meeting room.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-3 flex items-start gap-3">
+            <span className="text-amber-600 text-lg mt-0.5">⚠️</span>
+            <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+              Please click the login button in the next page and choose a Google account in the browser before proceeding. This ensures you have moderator controls during the session.
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => { setJoinDialogOpen(false); setPendingSessionId(null) }}>
+              Cancel
+            </Button>
+            <Button onClick={confirmJoinSession} className="gap-1.5">
+              <Video className="h-4 w-4" />
+              Continue to Session
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

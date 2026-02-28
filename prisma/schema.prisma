@@ -31,7 +31,7 @@ model User {
   verificationStatus VerificationStatus? @map("verification_status")
 
   createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  updatedAt         DateTime  @default(now()) @updatedAt
 
   // Relations
   therapistAvailability TherapistAvailability[]
@@ -115,7 +115,8 @@ model TherapistNote {
   therapistId Int      @map("therapist_id")
   patientId   Int      @map("patient_id")
   noteContent String   @map("note_content")
-  createdAt   DateTime @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
   therapist   User     @relation("TherapistNotesCreated", fields: [therapistId], references: [id])
   patient     User     @relation("TherapistNotesAbout", fields: [patientId], references: [id])
@@ -130,7 +131,8 @@ model Journal {
   entryText String   @map("entry_text")
   moodValue Int?     @map("mood_value")
   tags      String?
-  createdAt DateTime @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   patient   User     @relation(fields: [patientId], references: [id])
 
@@ -189,7 +191,8 @@ model WellnessContent {
   contentBody String?  @map("content_body")
   videoUrl    String?  @map("video_url")
   topics      String?
-  createdAt   DateTime @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
   author      User     @relation(fields: [authorId], references: [id])
 
@@ -202,7 +205,8 @@ model Notification {
   notificationType NotificationType @map("notification_type")
   message         String
   readStatus      Boolean  @map("read_status") @default(false)
-  createdAt       DateTime @map("created_at") @default(now())
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
   user            User     @relation(fields: [userId], references: [id])
 

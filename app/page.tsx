@@ -55,10 +55,10 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-  <Link href="/auth/register">
-    <Button
-      size="lg"
-      className="
+                <Link href="/auth/register">
+                  <Button
+                    size="lg"
+                    className="
         w-full sm:w-auto 
         h-14 px-10 
         text-lg font-semibold 
@@ -69,17 +69,17 @@ export default function Home() {
         rounded-xl
         group
       "
-    >
-      Get Started Free
-      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-    </Button>
-  </Link>
+                  >
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
 
-  <Link href="/auth/login">
-    <Button
-      size="lg"
-      variant="ghost"
-      className="
+                <Link href="/auth/login">
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    className="
         w-full sm:w-auto 
         h-14 px-10 
         text-lg font-semibold
@@ -91,11 +91,11 @@ export default function Home() {
         rounded-xl
         transition-all duration-300
       "
-    >
-      Sign In
-    </Button>
-  </Link>
-</div>
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-6 pt-8">
@@ -402,10 +402,10 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-  <Link href="/auth/register">
-    <Button
-      size="lg"
-      className="
+            <Link href="/auth/register">
+              <Button
+                size="lg"
+                className="
         w-full sm:w-auto 
         h-14 px-10 
         text-lg font-semibold 
@@ -416,17 +416,17 @@ export default function Home() {
         rounded-xl
         group
       "
-    >
-      Get Started Free
-      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-    </Button>
-  </Link>
+              >
+                Get Started Free
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
 
-  <Link href="/auth/login">
-    <Button
-      size="lg"
-      variant="ghost"
-      className="
+            <Link href="/auth/login">
+              <Button
+                size="lg"
+                variant="ghost"
+                className="
         w-full sm:w-auto 
         h-14 px-10 
         text-lg font-semibold
@@ -438,10 +438,10 @@ export default function Home() {
         rounded-xl
         transition-all duration-300
       "
-    >
-      Sign In
-    </Button>
-  </Link>
+              >
+                Sign In
+              </Button>
+            </Link>
           </div>
 
           <p className="text-sm text-white/60 pt-4">
@@ -456,8 +456,12 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                  <Brain className="h-6 w-6 text-primary-foreground" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary p-1.5">
+                  <img
+                    src="/lumivia_logo.png"
+                    alt="Lumivia"
+                    className="h-full w-full object-contain"
+                  />
                 </div>
                 <span className="font-bold text-xl">Lumivia</span>
               </div>

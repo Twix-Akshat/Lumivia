@@ -77,8 +77,12 @@ export default function LoginPage() {
             <div className="flex justify-center">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse"></div>
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/50">
-                  <Brain className="h-8 w-8 text-primary-foreground" />
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/50 p-2.5">
+                  <img
+                    src="/lumivia_logo.png"
+                    alt="Lumivia"
+                    className="h-full w-full object-contain"
+                  />
                 </div>
               </div>
             </div>

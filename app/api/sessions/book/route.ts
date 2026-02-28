@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma"
 import { SessionStatus, SessionType } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { createNotification } from "@/lib/notifications"
+import { logActivity } from "@/lib/activity-logger"
 
 /**
  * Convert "HH:mm" or "HH:mm:ss" into a Date object for @db.Time.
@@ -127,6 +128,9 @@ export async function POST(req: Request) {
       type: "booking_request",
       message: "You have a new booking request.",
     })
+
+    // Log activity
+    await logActivity(pId, "SESSION_BOOKED", req)
 
     return NextResponse.json(newSession, { status: 201 })
 
