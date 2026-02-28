@@ -358,12 +358,12 @@ function DayRow({
         </Label>
       </div>
 
-      {/* Time inputs */}
+      {/* Time inputs + actions */}
       <div
-        className={`flex flex-1 items-center gap-2 transition-opacity duration-200 ${state.enabled ? "opacity-100" : "opacity-30 pointer-events-none"
+        className={`flex flex-wrap items-center gap-2 transition-opacity duration-200 ${state.enabled ? "opacity-100" : "opacity-30 pointer-events-none"
           }`}
       >
-        <div className="relative flex-1">
+        <div className="relative min-w-[120px] flex-1">
           <Clock className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="time"
@@ -378,7 +378,7 @@ function DayRow({
 
         <span className="text-xs text-muted-foreground font-medium px-1">to</span>
 
-        <div className="relative flex-1">
+        <div className="relative min-w-[120px] flex-1">
           <Clock className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="time"
@@ -391,41 +391,43 @@ function DayRow({
           />
         </div>
 
-        {/* Save button */}
-        <Button
-          size="sm"
-          variant={state.saved ? "secondary" : "default"}
-          className="h-9 w-9 shrink-0 p-0"
-          onClick={() => onSave(day.name)}
-          disabled={state.saving || state.saved}
-          aria-label={`Save ${day.name}`}
-        >
-          {state.saving ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : state.saved ? (
-            <CheckCircle2 className="h-3.5 w-3.5" />
-          ) : (
-            <Save className="h-3.5 w-3.5" />
-          )}
-        </Button>
-
-        {/* Delete button - only visible when day has saved availability */}
-        {state.saved && (
+        {/* Action buttons */}
+        <div className="flex items-center gap-1 shrink-0">
           <Button
             size="sm"
-            variant="ghost"
-            className="h-9 w-9 shrink-0 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onDelete(day.name)}
-            disabled={state.deleting}
-            aria-label={`Delete ${day.name} availability`}
+            variant={state.saved ? "secondary" : "default"}
+            className="h-9 w-9 shrink-0 p-0"
+            onClick={() => onSave(day.name)}
+            disabled={state.saving || state.saved}
+            aria-label={`Save ${day.name}`}
           >
-            {state.deleting ? (
+            {state.saving ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : state.saved ? (
+              <CheckCircle2 className="h-3.5 w-3.5" />
             ) : (
-              <Trash2 className="h-3.5 w-3.5" />
+              <Save className="h-3.5 w-3.5" />
             )}
           </Button>
-        )}
+
+          {/* Delete button - only visible when day has saved availability */}
+          {state.saved && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-9 w-9 shrink-0 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => onDelete(day.name)}
+              disabled={state.deleting}
+              aria-label={`Delete ${day.name} availability`}
+            >
+              {state.deleting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )
