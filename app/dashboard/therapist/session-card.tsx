@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { CalendarDays, Clock, Video, FileText, CheckCircle2, XCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
+import { dbTimeTo12Hour } from "@/lib/wallClockTime"
 
 export type SessionStatus = "pending" | "accepted" | "completed" | "cancelled" | "rejected"
 export type SessionType = "video" | "audio" | "chat"
@@ -38,25 +39,23 @@ function getInitials(name: string) {
 }
 
 function formatTime(dateStr: string) {
-    try {
-        return new Date(dateStr).toLocaleTimeString("en-US", {
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true,
-        })
-    } catch (e) {
-        return dateStr
-    }
+    return dbTimeTo12Hour(dateStr)
 }
 
 function formatDate(dateStr: string) {
     try {
-        return new Date(dateStr).toLocaleDateString("en-US", {
+        const d = new Date(dateStr)
+        if (isNaN(d.getTime())) return dateStr
+        const y = d.getUTCFullYear()
+        const mo = d.getUTCMonth()
+        const day = d.getUTCDate()
+        return new Date(Date.UTC(y, mo, day)).toLocaleDateString("en-US", {
             weekday: "short",
             month: "short",
             day: "numeric",
+            timeZone: "UTC",
         })
-    } catch (e) {
+    } catch {
         return dateStr
     }
 }

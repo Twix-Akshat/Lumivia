@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button"
 import { Calendar, Video } from "lucide-react"
 import { firstLetterCapitalize } from "@/lib/utils"
+import { formatScheduledDateOnly, dbTimeTo12Hour } from "@/lib/wallClockTime"
 
 export type SessionStatus = string
 export type SessionType = string
@@ -20,24 +21,12 @@ type SessionCardProps = {
   onCancel?: () => void
 }
 
-/** Format ISO date to readable (e.g. "Feb 18, 2025"). */
 function formatDate(iso: string): string {
-  try {
-    const d = new Date(iso)
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-  } catch {
-    return iso
-  }
+  return formatScheduledDateOnly(iso)
 }
 
-/** Extract time from ISO string (e.g. "10:00 AM"). */
 function formatTime(iso: string): string {
-  try {
-    const d = new Date(iso)
-    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-  } catch {
-    return iso
-  }
+  return dbTimeTo12Hour(iso)
 }
 
 export function SessionCard({

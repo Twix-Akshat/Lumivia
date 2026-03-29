@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
+import { dbTimeToHHMM } from "@/lib/wallClockTime"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -717,7 +718,7 @@ export default function AdminDashboardClient() {
                   <div className="flex flex-wrap gap-1.5">
                     {previewData.therapistAvailability.map((slot: any) => (
                       <Badge key={slot.id} variant="secondary" className="text-xs font-normal">
-                        {slot.dayOfWeek} {slot.startTime?.slice(11, 16)} - {slot.endTime?.slice(11, 16)}
+                        {slot.dayOfWeek} {dbTimeToHHMM(slot.startTime)} – {dbTimeToHHMM(slot.endTime)}
                       </Badge>
                     ))}
                   </div>

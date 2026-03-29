@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useAlert } from "@/components/ui/custom-alert"
+import { dbTimeToHHMM, dbTimeTo12Hour } from "@/lib/wallClockTime"
 
 interface AvailabilitySlot {
   id: number
@@ -74,30 +75,40 @@ function getNextAvailableSlot(availability: AvailabilitySlot[]): string | null {
   if (!availability.length) return null
 
   const now = new Date()
-  const currentDayIndex = (now.getDay() + 6) % 7 // Monday=0
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-  // Check today and next 7 days
   for (let offset = 0; offset < 7; offset++) {
-    const checkDayIndex = (currentDayIndex + offset) % 7
-    const dayName = dayOrder[checkDayIndex]
+    const check = new Date(now)
+    check.setDate(now.getDate() + offset)
+    check.setHours(0, 0, 0, 0)
+
+    const dayName = dayNames[check.getDay()]
 
     const slotsForDay = availability
-      .filter(s => s.dayOfWeek === dayName)
-      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+      .filter((s) => s.dayOfWeek === dayName)
+      .sort((a, b) => dbTimeToHHMM(a.startTime).localeCompare(dbTimeToHHMM(b.startTime)))
 
     for (const slot of slotsForDay) {
-      const timeStr = slot.startTime.slice(11, 16) // "HH:MM"
-      const [h, m] = timeStr.split(":").map(Number)
-      const slotMinutes = h * 60 + m
+      const [h, m] = dbTimeToHHMM(slot.startTime).split(":").map(Number)
+      const slotStart = new Date(
+        check.getFullYear(),
+        check.getMonth(),
+        check.getDate(),
+        h,
+        m,
+        0,
+        0
+      )
 
-      if (offset === 0 && slotMinutes <= currentMinutes) continue // past today
+      if (slotStart <= now) continue
 
-      const label = offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : dayName
-      const hour = h % 12 || 12
-      const ampm = h >= 12 ? "PM" : "AM"
-      const minuteStr = m === 0 ? "" : `:${String(m).padStart(2, "0")}`
-      return `${label} at ${hour}${minuteStr} ${ampm}`
+      const label =
+        offset === 0
+          ? "Today"
+          : offset === 1
+            ? "Tomorrow"
+            : dayAbbrev[dayName] || dayName
+      return `${label} at ${dbTimeTo12Hour(slot.startTime)}`
     }
   }
   return null
@@ -132,10 +143,17 @@ export default function TherapistPage({
   const fetchSlots = async (date: string) => {
     setSlotsLoading(true)
     try {
-      const res = await fetch(`/api/therapist/${id}/slots?date=${date}`)
+      const res = await fetch("/api/therapist/available-slots", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          therapistId: Number(id),
+          selectedDate: date,
+        }),
+      })
       if (!res.ok) throw new Error("Failed to fetch slots")
       const data = await res.json()
-      setSlots(data.slots || [])
+      setSlots(Array.isArray(data) ? data : [])
     } catch {
       setSlots([])
     } finally {
@@ -521,7 +539,9 @@ export default function TherapistPage({
             <Calendar className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-bold text-foreground">Weekly Availability</h2>
           </div>
-          <p className="text-foreground/60 text-sm mb-6 ml-7">All times shown in IST</p>
+          <p className="text-foreground/60 text-sm mb-6 ml-7">
+            Session hours use the same clock time you set in your schedule (consistent on web and in bookings).
+          </p>
 
           {sortedDays.length === 0 ? (
             <div className="text-center py-12">
@@ -539,10 +559,12 @@ export default function TherapistPage({
                   </h3>
                   <div className="space-y-1.5">
                     {(groupedAvailability[day] as AvailabilitySlot[])
-                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                      .sort((a, b) =>
+                        dbTimeToHHMM(a.startTime).localeCompare(dbTimeToHHMM(b.startTime))
+                      )
                       .map((slot) => {
-                        const start = slot.startTime.slice(11, 16)
-                        const end = slot.endTime.slice(11, 16)
+                        const start = dbTimeToHHMM(slot.startTime)
+                        const end = dbTimeToHHMM(slot.endTime)
                         return (
                           <div
                             key={slot.id}

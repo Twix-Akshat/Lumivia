@@ -17,6 +17,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { useAlert } from "@/components/ui/custom-alert"
+import { dbTimeToHHMM, dbTimeTo12Hour } from "@/lib/wallClockTime"
 
 const days = [
   { name: "Monday", short: "Mon" },
@@ -46,26 +47,13 @@ interface DayState {
 
 type DayStates = Record<string, DayState>
 
-function formatTime(isoString: string): string {
-  try {
-    return new Date(isoString).toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  } catch {
-    return isoString
-  }
+/** Map DB time to `<input type="time" />` value (HH:mm) — UTC wall-clock, no browser TZ. */
+function toTimeInputValue(isoString: string): string {
+  return dbTimeToHHMM(isoString)
 }
 
 function formatTimeDisplay(isoString: string): string {
-  try {
-    return new Date(isoString).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  } catch {
-    return isoString
-  }
+  return dbTimeTo12Hour(isoString)
 }
 
 export default function TherapistSchedule() {
@@ -99,8 +87,8 @@ export default function TherapistSchedule() {
             if (updated[a.dayOfWeek]) {
               updated[a.dayOfWeek] = {
                 enabled: true,
-                startTime: formatTime(a.startTime),
-                endTime: formatTime(a.endTime),
+                startTime: toTimeInputValue(a.startTime),
+                endTime: toTimeInputValue(a.endTime),
                 saved: true,
                 saving: false,
                 deleting: false,

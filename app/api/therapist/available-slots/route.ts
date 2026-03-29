@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma"
 import { NextResponse } from "next/server"
+import { utcCalendarDateFromParts } from "@/lib/wallClockTime"
 
 export async function POST(req: Request) {
     try {
@@ -79,21 +80,13 @@ export async function POST(req: Request) {
             }
         }
 
-        // 3️⃣ Fetch booked sessions for THAT DATE
-        // Use localDate (correctly built from the string parts above)
-        const startOfDay = new Date(localDate)
-        startOfDay.setHours(0, 0, 0, 0)
-
-        const endOfDay = new Date(localDate)
-        endOfDay.setHours(23, 59, 59, 999)
+        // 3️⃣ Booked sessions on that calendar day (must match parseDateOnly in /api/sessions/book)
+        const scheduledDateOnly = utcCalendarDateFromParts(year, month, day)
 
         const bookedSessions = await prisma.session.findMany({
             where: {
                 therapistId: therapistId,
-                scheduledDate: {
-                    gte: startOfDay,
-                    lte: endOfDay,
-                },
+                scheduledDate: scheduledDateOnly,
             },
             select: {
                 startTime: true,

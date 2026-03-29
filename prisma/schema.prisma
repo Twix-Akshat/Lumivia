@@ -83,6 +83,7 @@ model Session {
   meetingRoomId  String?
   sessionSummary   String?   @map("session_summary")
   completedAt      DateTime? @map("completed_at")
+  paymentExpiryAt DateTime?
 
   patient          User      @relation("PatientSessions", fields: [patientId], references: [id])
   therapist        User      @relation("TherapistSessions", fields: [therapistId], references: [id])
@@ -165,19 +166,32 @@ model AssessmentResult {
 }
 
 model Payment {
-  id                  Int      @id @default(autoincrement()) @map("payment_id")
-  sessionId           Int?     @map("session_id")
-  patientId           Int      @map("patient_id")
-  therapistId         Int      @map("therapist_id")
-  amount              Decimal  @db.Decimal(10, 2)
-  paymentStatus       PaymentStatus @map("payment_status")
-  paymentMethod       String?  @map("payment_method") // Enum in schema but simple string here
-  transactionReference String  @unique @map("transaction_reference")
-  paymentDate         DateTime @map("payment_date")
+  payment_id                   Int      @id @default(autoincrement()) @map("payment_id")
+  sessionId            Int      @map("session_id")
+  patientId            Int      @map("patient_id")
+  therapistId          Int      @map("therapist_id")
 
-  session             Session? @relation(fields: [sessionId], references: [id])
-  patient             User     @relation("PaymentsMade", fields: [patientId], references: [id])
-  therapist           User     @relation("PaymentsReceived", fields: [therapistId], references: [id])
+  amount               Decimal  @db.Decimal(10, 2)
+
+  paymentStatus        PaymentStatus @map("payment_status")
+  paymentMethod        String?  @map("payment_method")
+
+  transactionReference String   @unique @map("transaction_reference")
+  paytmOrderId         String   @unique @map("paytm_order_id")
+
+  gatewayResponse      Json?    @map("gateway_response")
+
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+
+  session              Session  @relation(fields: [sessionId], references: [id])
+  patient              User     @relation("PaymentsMade", fields: [patientId], references: [id])
+  therapist            User     @relation("PaymentsReceived", fields: [therapistId], references: [id])
+
+  @@index([patientId])
+  @@index([therapistId])
+  @@index([sessionId])
+  @@index([paymentStatus])
 
   @@map("payments")
 }
@@ -299,12 +313,10 @@ enum VerificationStatus {
 }
 
 enum SessionStatus {
-  available
-  pending
-  accepted
+  pending_payment
+  confirmed
   completed
   cancelled
-  declined
 }
 
 enum SessionType {
@@ -314,9 +326,10 @@ enum SessionType {
 }
 
 enum PaymentStatus {
-  paid
-  failed
+  completed
   pending
+  failed
+  refunded
 }
 
 enum ContentType {
@@ -330,4 +343,10 @@ enum NotificationType {
   session_accepted
   payment_success
   general
+}
+
+enum PayoutStatus {
+  not_eligible
+  pending
+  released 
 }

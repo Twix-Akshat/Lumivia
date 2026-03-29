@@ -27,6 +27,7 @@ import {
   X,
   MessageSquare,
 } from "lucide-react"
+import { formatScheduledDateOnly, dbTimeTo12Hour } from "@/lib/wallClockTime"
 import { StatCard } from "./stat-card"
 import { SessionCard } from "./session-card"
 import { TherapistCard } from "./therapist-card"
@@ -221,18 +222,9 @@ export default function PatientDashboard() {
   const firstName = session?.user?.name?.split(" ")[0] ?? "there"
   const nextSession = upcomingSessions[0]
   const nextSessionDate = nextSession
-    ? new Date(nextSession.scheduledDate).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    })
+    ? formatScheduledDateOnly(nextSession.scheduledDate)
     : null
-  const nextSessionTime = nextSession
-    ? new Date(nextSession.startTime).toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    })
-    : null
+  const nextSessionTime = nextSession ? dbTimeTo12Hour(nextSession.startTime) : null
   const nextTherapistName = nextSession?.therapist?.fullName ?? null
 
   return (
